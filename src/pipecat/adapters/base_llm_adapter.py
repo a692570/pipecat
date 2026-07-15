@@ -13,7 +13,7 @@ adapters that handle tool format conversion and standardization.
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
 from loguru import logger
 
@@ -162,6 +162,28 @@ class BaseLLMAdapter(ABC, Generic[TLLMInvocationParams]):
         return context.get_messages(
             self.id_for_llm_specific_messages, truncate_large_values=truncate_large_values
         )
+
+    def _get_unwrapped_messages_for_logging(self, context: LLMContext) -> list[dict[str, Any]]:
+        """Get context messages as JSON-serializable dicts ready for logging.
+
+        Large values (images, audio) are replaced with short placeholders, and
+        ``LLMSpecificMessage`` wrappers are unwrapped to their payloads so the
+        result can be serialized (e.g. for tracing span attributes).
+
+        Args:
+            context: The LLM context containing messages.
+
+        Returns:
+            List of messages as plain dicts.
+        """
+        # Standard messages are TypedDicts — plain dicts at runtime. Cast at
+        # the boundary.
+        return [
+            message.message
+            if isinstance(message, LLMSpecificMessage)
+            else cast(dict[str, Any], message)
+            for message in self.get_messages(context, truncate_large_values=True)
+        ]
 
     def from_standard_tools(self, tools: Any) -> list[Any] | NotGiven:
         """Convert tools from standard format to provider format.

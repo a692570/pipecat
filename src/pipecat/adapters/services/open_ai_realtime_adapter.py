@@ -81,7 +81,7 @@ class OpenAIRealtimeLLMAdapter(BaseLLMAdapter):
         Returns:
             List of messages in a format ready for logging about OpenAI Realtime.
         """
-        return cast(list[dict[str, Any]], self.get_messages(context, truncate_large_values=True))
+        return self._get_unwrapped_messages_for_logging(context)
 
     @dataclass
     class ConvertedMessages:
