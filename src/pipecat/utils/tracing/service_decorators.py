@@ -151,7 +151,9 @@ def _add_token_usage_to_span(span, token_usage):
                 token_usage["cache_creation_input_tokens"],
             )
         if "reasoning_tokens" in token_usage and token_usage["reasoning_tokens"] is not None:
-            span.set_attribute("gen_ai.usage.reasoning_tokens", token_usage["reasoning_tokens"])
+            span.set_attribute(
+                "gen_ai.usage.reasoning.output_tokens", token_usage["reasoning_tokens"]
+            )
     else:
         # Handle LLMTokenUsage object
         span.set_attribute("gen_ai.usage.input_tokens", getattr(token_usage, "prompt_tokens", 0))
@@ -170,7 +172,7 @@ def _add_token_usage_to_span(span, token_usage):
 
         reasoning_tokens = getattr(token_usage, "reasoning_tokens", None)
         if reasoning_tokens is not None:
-            span.set_attribute("gen_ai.usage.reasoning_tokens", reasoning_tokens)
+            span.set_attribute("gen_ai.usage.reasoning.output_tokens", reasoning_tokens)
 
 
 def traced_tts(func: Callable | None = None, *, name: str | None = None) -> Callable:
